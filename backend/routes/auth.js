@@ -72,7 +72,8 @@ router.post('/register', [
     });
   } catch (error) {
     console.error('Registration error:', error);
-    res.status(500).json({ message: 'Server error' });
+    const detail = process.env.NODE_ENV !== 'production' ? (error && error.message) : undefined;
+    res.status(500).json(detail ? { message: 'Server error', detail } : { message: 'Server error' });
   }
 });
 
@@ -121,7 +122,8 @@ router.post('/login', [
     });
   } catch (error) {
     console.error('Login error:', error);
-    res.status(500).json({ message: 'Server error' });
+    const detail = process.env.NODE_ENV !== 'production' ? (error && error.message) : undefined;
+    res.status(500).json(detail ? { message: 'Server error', detail } : { message: 'Server error' });
   }
 });
 
