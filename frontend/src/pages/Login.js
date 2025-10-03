@@ -3,15 +3,31 @@ import { Container, Paper, TextField, Button, Typography, Box, Alert } from '@mu
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 
+const emailRegex = /\S+@\S+\.[\S]+/;
+
 const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [fieldErrors, setFieldErrors] = useState({ email: '', password: '' });
   const { login, loading, error } = useAuth();
   const navigate = useNavigate();
 
+  const validate = () => {
+    const errs = { email: '', password: '' };
+    if (!emailRegex.test(email)) {
+      errs.email = 'Enter a valid email address';
+    }
+    if (!password || password.length < 6) {
+      errs.password = 'Password must be at least 6 characters';
+    }
+    setFieldErrors(errs);
+    return !errs.email && !errs.password;
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const result = await login(email, password);
+    if (!validate()) return;
+    const result = await login(email.trim(), password);
     if (result.success) {
       navigate('/dashboard');
     }
@@ -26,7 +42,7 @@ const Login = () => {
         
         {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
         
-        <Box component="form" onSubmit={handleSubmit} sx={{ mt: 1 }}>
+        <Box component="form" onSubmit={handleSubmit} sx={{ mt: 1 }} noValidate>
           <TextField
             margin="normal"
             required
@@ -37,7 +53,9 @@ const Login = () => {
             autoComplete="email"
             autoFocus
             value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            onChange={(e) => { setEmail(e.target.value); if (fieldErrors.email) setFieldErrors({ ...fieldErrors, email: '' }); }}
+            error={Boolean(fieldErrors.email)}
+            helperText={fieldErrors.email}
           />
           <TextField
             margin="normal"
@@ -49,7 +67,9 @@ const Login = () => {
             id="password"
             autoComplete="current-password"
             value={password}
-            onChange={(e) => setPassword(e.target.value)}
+            onChange={(e) => { setPassword(e.target.value); if (fieldErrors.password) setFieldErrors({ ...fieldErrors, password: '' }); }}
+            error={Boolean(fieldErrors.password)}
+            helperText={fieldErrors.password}
           />
           <Button
             type="submit"
