@@ -2,7 +2,6 @@ const puppeteer = require('puppeteer');
 const { PDFDocument, rgb } = require('pdf-lib');
 const fs = require('fs').promises;
 const path = require('path');
-const Jimp = require('jimp');
 
 class DocumentGenerator {
   constructor() {

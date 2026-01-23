@@ -8,31 +8,27 @@ class CryptoService {
       : bitcoin.networks.testnet;
   }
 
-  // Encryption utilities
+  // Encryption utilities (AES-256-CBC with random IV)
   encrypt(text) {
     const algorithm = 'aes-256-cbc';
     const key = crypto.scryptSync(process.env.JWT_SECRET, 'salt', 32);
     const iv = crypto.randomBytes(16);
-    const cipher = crypto.createCipher(algorithm, key);
-    
-    let encrypted = cipher.update(text, 'utf8', 'hex');
-    encrypted += cipher.final('hex');
-    
-    return iv.toString('hex') + ':' + encrypted;
+
+    const cipher = crypto.createCipheriv(algorithm, key, iv);
+    const encrypted = Buffer.concat([cipher.update(text, 'utf8'), cipher.final()]);
+    return iv.toString('hex') + ':' + encrypted.toString('hex');
   }
 
   decrypt(encryptedText) {
     const algorithm = 'aes-256-cbc';
     const key = crypto.scryptSync(process.env.JWT_SECRET, 'salt', 32);
-    const textParts = encryptedText.split(':');
-    const iv = Buffer.from(textParts.shift(), 'hex');
-    const encrypted = textParts.join(':');
-    const decipher = crypto.createDecipher(algorithm, key);
-    
-    let decrypted = decipher.update(encrypted, 'hex', 'utf8');
-    decrypted += decipher.final('utf8');
-    
-    return decrypted;
+    const [ivHex, encryptedHex] = encryptedText.split(':');
+    const iv = Buffer.from(ivHex, 'hex');
+    const encrypted = Buffer.from(encryptedHex, 'hex');
+
+    const decipher = crypto.createDecipheriv(algorithm, key, iv);
+    const decrypted = Buffer.concat([decipher.update(encrypted), decipher.final()]);
+    return decrypted.toString('utf8');
   }
 
   // Bitcoin wallet generation
